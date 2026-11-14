@@ -21,4 +21,11 @@ Generated codes were manually reviewed, modified, and integrated by the authors.
 - **Crop dataset** (`data/crops.json`) — Claude cross-checked FAO-56, GRDC and USDA NASS figures and flagged where published numbers disagreed across studies. Those caveats are recorded in the dataset's own `source` fields.
 - **Documentation** (`docs/`) — drafted from the working code and checked
 against it, not written speculatively ahead of the implementation.
-- **Tests and debugging** (`tests/`) — Generated unit tests for the algorithm scripts.
+- **Tests** (`backend/tests/`) — regression tests written alongside each
+feature as it was built.
+
+## What stayed human
+Every substantive decision (which crops to add, which risks to surface,
+how a rotation should be scored, what the demo should teach a judge etc.) was
+made by the team. Claude drafted and implemented; it did not choose the
+project's scope, sources, or claims.
