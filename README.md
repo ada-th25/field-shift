@@ -5,6 +5,7 @@
 ```text
 nasa-field-shift-crop-rotation/
 ├── README.md              # what it is, how to run each part
+├── AI_USAGE.md            # AI usage references, declaration & documentation
 ├── backend/
 │   ├── app/
 │   │   ├── main.py        # FastAPI routes
