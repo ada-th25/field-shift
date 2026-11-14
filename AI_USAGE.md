@@ -18,3 +18,4 @@ Generated codes were manually reviewed, modified, and integrated by the authors.
 - Claude Code, Sonnet 5 (Anthropic)
 
 ## Where it helped
+- - **Crop dataset** (`data/crops.json`) — Claude cross-checked FAO-56, GRDC and USDA NASS figures and flagged where published numbers disagreed across studies. Those caveats are recorded in the dataset's own `source` fields.
