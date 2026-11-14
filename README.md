@@ -1,9 +1,9 @@
-# nasa-field-shift-crop-rotation
+# NASA Space App Challenge: Crop Rotation Recommendation Tool
 
 ## Repo structure
 
 ```text
-nasa-field-shift-crop-rotation/
+field-shift/
 ├── README.md              # what it is, how to run each part
 ├── AI_USAGE.md            # AI usage references, declaration & documentation
 ├── backend/
