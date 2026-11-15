@@ -221,3 +221,5 @@ real-world verification, not just internal consistency.
 - [Kajol Mistry](https://github.com/kajolmistry): Research and science lead
 - Airan Hughes: Art and design lead
 
+<img src="figures/team_photo.jpeg" alt="Team TaterTech" width="500">
+
