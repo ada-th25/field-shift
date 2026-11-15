@@ -41,6 +41,7 @@ class RankedRotation(BaseModel):
     rsi: float
     year_breakdown: list[dict]
     impact_metrics: dict
+    metrics: dict
     risks_and_gaps: list[str] = []
 
 
@@ -50,3 +51,11 @@ class FarmResponse(BaseModel):
     top_rotations: list[RankedRotation]
     excluded_crops: list[dict] = []
     current_rotation: RankedRotation | None = None
+    rainfall_mm: float
+    root_wetness: float
+    data_window: list[str]
+    scope: str = (
+        "Historical screening of candidate rotations, not planting advice or a"
+        " forecast. Water availability and nitrogen are approximate proxies."
+    )
+    sources: list[str] = ["NASA POWER daily point", "ISRIC SoilGrids"]

@@ -1,4 +1,4 @@
-<img src="figures/team_logo.jpeg" alt="Team logo" width="160">
+<img src="figures/team_logo.jpeg" alt="Team logo" width="500">
 
 ### Team TaterTech
 
@@ -95,6 +95,8 @@ recommendations to help them win.
 - [API contract](docs/api-contract.md) — the request/response shape.
 - [Validation](docs/validation.md) — the multi-site stress test and the
   comparison against a real long-term Iowa State field study.
+- [Deployment](docs/deployment.md) — free, always-on public hosting
+  options for judging, and testing the Docker build locally.
 - [AI usage](AI_USAGE.md) — where Claude Code was used to build this, and
   where it wasn't.
 
@@ -150,36 +152,45 @@ field-shift/
     └── validation.md
 ```
 
-## 🚀 Getting started: the backend
+## 🚀 Getting started: run the website
 
 ```bash
 cd backend
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r app/requirements.txt
+uvicorn app.main:app --reload
+```
+
+Then open **http://localhost:8000/** in a browser. The backend serves the
+full Harvest Heroes frontend directly (the map, crop cards, minigame, and
+the real NASA-backed recommendation engine all run against this one
+server) — nothing else to start.
+
+Note: on Python 3.14, `pydantic`/`pandas` wheels may not be published yet;
+use Python 3.12 or 3.13 for the venv if `pip install` tries to compile
+from source.
+
+A public, always-on deployment (no local setup needed to see it) is
+covered in [docs/deployment.md](docs/deployment.md).
+
+### Backend only, no browser
+
+```bash
+cd backend
+source .venv/bin/activate
 python scripts/demo.py
 ```
 
 This fetches live NASA POWER and SoilGrids data for a demo farm near
 Ames, Iowa, computes FAO-56 reference ET0 and crop water demand, scores
 every valid 3-year rotation from `data/crops.json`, and prints the top 5
-ranked rotations with their real impact metrics and risk caveats. No
-server needed.
+ranked rotations with their real impact metrics and risk caveats. Try a
+different site with `python scripts/demo.py <lat> <lon>`.
 
-To run it as a real API instead:
-
-```bash
-cd backend
-source .venv/bin/activate
-uvicorn app.main:app --reload
-```
-
-Then `POST` to `http://localhost:8000/rotations` with at least `lat` and
-`lon`, see `docs/api-contract.md` for the full request/response shape.
-Try a different site with `python scripts/demo.py <lat> <lon>`.
-
-Note: on Python 3.14, `pydantic`/`pandas` wheels may not be published yet;
-use Python 3.12 or 3.13 for the venv if `pip install` tries to compile
-from source.
+With the server running, you can also `POST` to
+`http://localhost:8000/rotations` directly — see
+[docs/api-contract.md](docs/api-contract.md) for the full request/response
+shape.
 
 ## ✅ Running the tests
 
