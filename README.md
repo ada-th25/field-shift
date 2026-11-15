@@ -2,7 +2,7 @@
 
 ### Team TaterTech
 
-# 🌾 Field Shift: Crop Rotation Recommendation Engine
+# 🌾 Harvest Heroes: Crop Rotation Recommendation Engine
 
 Built for the NASA Space Apps Challenge "Field Shift: Adapting Farms with
 NASA Data."
@@ -56,16 +56,18 @@ and `docs/validation.md` documents real scoring questions this project's
 own cross-checking found and addressed before anyone outside the team saw
 them.
 
-## 🎮 The interactive concept: Harvest Heroes
+## 🎮 The interactive experience
 
-Rather than a static report, the recommendation is presented through
-**Harvest Heroes**, a few interactive pieces built around the engine:
+Rather than a static report, the recommendation is presented through a
+few interactive pieces built around the engine:
 
 <img src="figures/location_picker_screenshot.jpeg" alt="Farm setup screen" width="500">
 
 A farm setup screen collects the location, biome, soil, season and other
 details for the challenge ahead, with a "choose on map" option rather
-than requiring the farmer to type coordinates.
+than requiring the farmer to type coordinates, and sliders for the
+farmer to set their own priority weights (soil health, water, drought
+resilience, revenue) that feed directly into the RSI scoring.
 
 <img src="figures/interactive_map_screenshot.jpeg" alt="Interactive location map" width="500">
 
