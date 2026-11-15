@@ -7,6 +7,14 @@
 Built for the NASA Space Apps Challenge "Field Shift: Adapting Farms with
 NASA Data."
 
+**🌐 Live site: https://field-shift-nnkf.onrender.com**
+
+This runs on a free hosting tier that sleeps after 15 minutes of
+inactivity. **If it's your first visit in a while, the page may take
+30-60 seconds to load — that's normal, not broken.** Just wait on the
+page (don't close the tab) and it'll come up. See
+[docs/deployment.md](docs/deployment.md) for details.
+
 ## 🌍 The problem
 
 Deciding what to plant next season is usually habit and local memory, not

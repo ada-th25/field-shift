@@ -1,39 +1,16 @@
 # Deployment
 
+**Live, currently deployed: https://field-shift-nnkf.onrender.com**
+(Render free web service, connected to the `backend_tsuyu` branch — any
+push to that branch auto-redeploys this URL.)
+
 This project has a real Python backend (it calls NASA POWER and ISRIC
 SoilGrids live), so it can't be hosted as static files — it needs
 somewhere that actually runs a server. A `Dockerfile` is included at the
 repo root for this; it builds the backend and serves the full frontend
 from the same container (`GET /`), so there's nothing else to deploy.
 
-Both options below are free and don't require a payment card.
-
-## Hugging Face Spaces, Gradio SDK (recommended — no cold-start sleep)
-
-Hugging Face gates the **Docker** SDK behind a paid plan on some
-accounts (the Space-creation page shows "Docker 🔒 Paid" if so). The
-**Gradio** SDK stays free and just runs `python app.py` in a Python
-environment — it doesn't require an actual Gradio UI, so the root
-`app.py` in this repo uses that slot to launch the real FastAPI backend
-directly via `uvicorn.run(...)`, the same server `uvicorn app.main:app`
-runs locally. This has been tested end-to-end (static assets, `/api/crops`,
-and a live `/rotations` NASA call all confirmed working through this
-entry point).
-
-1. Create a new Space: **New Space** → pick a name → **SDK: Gradio** →
-   **Visibility: Public**.
-2. Push this repo to the Space's git remote (shown on the Space's page
-   after creation), e.g.:
-   ```bash
-   git remote add space https://huggingface.co/spaces/<your-username>/<space-name>
-   git push space main
-   ```
-3. Hugging Face auto-installs the root `requirements.txt` and runs the
-   root `app.py` — no extra configuration needed. The Space builds and
-   starts automatically; the URL is
-   `https://huggingface.co/spaces/<your-username>/<space-name>`.
-
-## Render free web service (fallback, has cold-start sleep)
+## Render free web service (what's actually deployed)
 
 Free, no card required, and officially supports Docker without
 restriction. The one caveat: a free-tier service **sleeps after 15
@@ -42,12 +19,32 @@ cold start, which can look broken to a judge who doesn't wait. Opening
 the link yourself a minute or two before a judging session avoids this.
 
 1. Create a free account at [render.com](https://render.com).
-2. **New** → **Web Service** → connect this GitHub repo.
-3. Environment: **Docker** (Render will detect the root `Dockerfile`
-   automatically). Leave build/start commands blank — the Dockerfile
-   handles both.
-4. Deploy. Render sets `$PORT` itself; the `Dockerfile` already reads it.
-5. The URL is `https://<your-service-name>.onrender.com`.
+2. **New** → **Web Service** → connect this GitHub repo, select the
+   branch to deploy.
+3. **Language: Docker** (the default dropdown may suggest something else,
+   e.g. Ruby — change it; Render then auto-detects the root `Dockerfile`).
+   Leave Build/Start Command blank — the Dockerfile handles both.
+4. Pick the **Free** compute plan ($0/month, 0.1 CPU / 512 MB RAM).
+5. Deploy. Render sets `$PORT` itself; the `Dockerfile` already reads it.
+   The URL is `https://<your-service-name>.onrender.com`.
+
+## Hugging Face Spaces — attempted, abandoned for this account
+
+Hugging Face gates the **Docker** SDK behind a paid plan on some
+accounts, and separately gates **CPU Basic** hardware behind a PRO
+subscription for the **Gradio** SDK's free tier, leaving only **ZeroGPU**
+hardware available for free. The root `app.py` and `requirements.txt` in
+this repo are leftover from attempting that route (they launch the real
+FastAPI backend via `uvicorn.run(...)`, mounting a dummy Gradio app
+purely to satisfy ZeroGPU's `@spaces.GPU` detection) and got as far as
+passing that check, but then hit a port-binding conflict between our
+`uvicorn.run()` and ZeroGPU's own worker process, both claiming port
+7860. Abandoned in favor of Render rather than continuing to debug
+ZeroGPU-specific internals. If your Hugging Face account *does* have
+Docker SDK access (no paid-plan gate), that would be the simpler and
+no-cold-start route — see the git history of this file for the
+step-by-step Docker-SDK instructions that were written before this
+account's restriction was discovered.
 
 ## Testing the container locally first
 
