@@ -82,7 +82,7 @@ def fetch_soilgrids(
     """Fetch topsoil properties for a point and return a flat dict,
     e.g. {"clay_pct": 24.3, "sand_pct": 38.1, "ph": 6.4, "soc_g_kg": 18.2}.
 
-    Observed live (see docs/algorithm.md §13): the REST query endpoint
+    Observed live (see docs/algorithm.md section 13): the REST query endpoint
     sometimes returns a valid 200 response with every property null for a
     point that other nearby points resolve fine -- not an error we can
     catch, just an empty answer. A couple of quick retries costs little and

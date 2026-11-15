@@ -15,3 +15,108 @@ Demo location: Central Iowa (Ames, 42.0308, -93.6319) was chosen over
 Punjab/Spain for richest public validation data (USDA yield history) if we
 want to sanity-check outputs later.
 
+## How a request flows through the system
+
+```
+lat/lon + priority weights
+  -> NASA POWER API: daily rainfall, temp, humidity, wind, solar radiation,
+     root-zone/surface soil wetness (GWETROOT/GWETTOP)
+  -> SoilGrids API: topsoil clay/sand %, pH, organic carbon
+  -> FAO-56 Penman-Monteith: daily reference ET0 from the POWER weather data
+  -> per candidate rotation: crop water demand (Kc x ET0) for each crop
+  -> weighted scoring: soil score + water score + resilience score per year
+  -> ranked list of rotations, highest score first
+```
+
+Both API clients cache responses locally (`data/cache/`) so repeated runs
+don't keep re-hitting the APIs during development or the demo itself.
+
+## Why no SMAP / NDVI / Earth Engine yet
+
+The original idea list included SMAP soil moisture and MODIS/Landsat NDVI,
+both of which need Google Earth Engine. That's a significant setup cost
+(auth, raster processing) for a 2-day build. Instead we're using NASA
+POWER's `GWETROOT`/`GWETTOP` (root-zone and surface soil wetness) as the
+soil-moisture signal. It has the same API call as everything else, no extra auth.
+SMAP/NDVI are still good additions if we had more time left after the core
+tool works end to end.
+
+**Satellite vs. ground-based measurement**:
+every input this engine uses (NASA POWER, SoilGrids) is itself a *modelled*
+estimate, not a direct field reading. POWER's weather variables come from
+reanalysis models (MERRA-2/GEOS) calibrated against a mix of satellite and
+ground-station observations, and SoilGrids is a machine-learning prediction
+from sparse global soil survey points, not a sample taken from this
+specific field. That's why every rotation's `risks_and_gaps`
+recommends a local soil test and an agronomist's confirmation before
+adopting it: this tool narrows down plausible options using
+Earth-observation-scale data, a real soil sample and a farmer's lived
+experience of their own field are a finer-grained source of truth than
+any satellite-derived product, including the ones (SMAP, NDVI) this
+project didn't get to.
+
+**On pest and disease cycles**: the brief calls out "opportunities for
+rotations that could interrupt pest cycles" as something a tool like this
+might highlight. This project doesn't model pest/disease pressure directly
+(no pest incidence data source was in scope), but the hard agronomic rule
+that rejects repeating a crop family within a 2-year gap
+(`passes_agronomic_rules`) exists specifically because continuous
+same-family planting is what lets family-specific soil pests and diseases
+(e.g. soybean cyst nematode, corn rootworm) build up, so every candidate
+rotation this engine proposes already satisfies that goal by
+construction, even though it isn't scored or surfaced as its own metric.
+
+## Why the scoring math is simple
+
+The original sketch had a sigmoid-based RSI formula with an exponential
+time-discount and an agronomic penalty function. We simplified it to:
+
+1. **Hard filter first**: reject any candidate sequence that repeats a crop family within a configurable gap (default: no same family within 2 years). This is a real constraint, not a soft penalty, so a sequence either passes or doesn't.
+2. **Normalise each remaining criterion to 0-1** (soil, water, resilience) per year, rather than letting them grow unbounded.
+3. **Weighted sum** using the farmer's priority sliders, with a 0.9 per-year discount so near-term impact counts more than year 3.
+
+Detail on what's literature-backed vs. our own construction:
+
+- **FAO-56 Penman-Monteith ET0 and the Kc crop-coefficient approach** are exact, from Allen et al. (1998), FAO Irrigation and Drainage Paper 56, which is the global standard, not something we approximated.
+- **The suitability scoring formulas** (the soil/water/resilience 0-1
+  scores, the specific sub-weights) are our own construction, agronomically motivated but not pulled from a single published "rotation suitability index" paper, as we could not find any that we could adopt during literature review.
+- **Nitrogen balance direction** (legumes positive, heavy feeders like
+  maize negative) reflects real biological nitrogen fixation research
+  (Herridge et al. 2008, *Plant and Soil*), though the specific per-crop
+  numbers in `crops.json` came from USDA/Iowa State extension guidance, notthat paper directly.
+- **Bare-field days** (`bare_field_days_in_year`, `impact_metrics.bare_field_days_avoided`)
+  is our own construction: `365 - season_length_days`, a proxy for
+  how long a field sits without living cover each year. The motivation
+  is real and literature-backed (bare soil between crops is a well-known
+  erosion and nutrient-leaching risk window. This is the whole reason
+  cover crops exist as a practice), but the specific number is a rough
+  estimate from typical season length, not an actual farm planting
+  calendar, and doesn't credit post-harvest residue. Flagged as such in
+  every response's `risks_and_gaps`.
+
+## The crop dataset (`data/crops.json`)
+
+Ten crops: maize, soybean, winter wheat, oats, cereal rye (cover crop),
+alfalfa, lentil, chickpea, rice, sorghum. Each has nitrogen balance, water
+requirement (Kc curve + season length), temperature tolerance, root depth
+class, drought tolerance, and a cited source. The first six are Central
+Iowa rotation staples; lentil and chickpea were added as additional legume
+break-crop options (not Iowa-typical, but agronomically valid) to widen the
+candidate pool and give the frontend's crop-card set something to match
+against; rice and sorghum were added afterwards specifically to test
+whether the dataset could extend beyond a US-Midwest-temperate crop list.
+
+There's no single clean global API with all of these fields together.
+Closest real sources if we expand the crop list or add other regions:
+- **FAO-56 Tables 12/22** — Kc values and rooting depth, ~80 crops, PDF
+  tables (what the current 10 were transcribed from).
+- **FAO EcoCrop**, now folded into **GAEZ v4** (gaez.fao.org) — temperature/
+  rainfall/pH tolerance for 2,500+ species, but distributed as GIS raster
+  data, not a simple per-crop lookup; would need extraction code.
+- **Herridge et al. 2008** — nitrogen fixation rates by legume type.
+- **GRDC (Australia) pulse grow notes** — used for lentil/chickpea nitrogen
+  credit and climate tolerance, since those two aren't covered as well by
+  the US-focused sources above; published credit figures disagree between
+  studies, so those two values are flagged in `crops.json` as rough
+  order-of-magnitude estimates, not settled numbers.
+
