@@ -25,7 +25,6 @@ from app.engine.rotation_scoring import (
     score_sequence,
     single_year_perennials,
 )
-from app.engine.topsis import dimension_totals, topsis_closeness
 from app.schemas import FarmRequest, FarmResponse
 
 CROPS_PATH = Path(__file__).resolve().parents[2] / "data" / "crops.json"
@@ -95,21 +94,6 @@ def rank_rotations(request: FarmRequest):
     results = [score_named_sequence(sequence) for sequence in candidates]
     results.sort(key=lambda r: r["rsi"], reverse=True)
 
-    # Second ranking lens (TOPSIS, see app/engine/topsis.py): needs the
-    # whole candidate set at once to define its ideal/anti-ideal reference
-    # points, unlike rsi which is self-contained per rotation.
-    if results:
-        closeness_values = topsis_closeness(
-            [dimension_totals(r["year_breakdown"]) for r in results], weights
-        )
-        for result, closeness in zip(results, closeness_values):
-            result["topsis_closeness"] = closeness
-        topsis_sorted = sorted(results, key=lambda r: r["topsis_closeness"], reverse=True)
-        methods_agree_on_top_pick = results[0]["sequence"] == topsis_sorted[0]["sequence"]
-    else:
-        topsis_sorted = []
-        methods_agree_on_top_pick = None
-
     current_rotation = None
     if request.current_rotation:
         unknown = [name for name in request.current_rotation if name not in crops]
@@ -122,8 +106,6 @@ def rank_rotations(request: FarmRequest):
         soil=soil,
         mean_et0_mm_day=float(et0.mean()),
         top_rotations=results[: request.top_n],
-        topsis_top_rotations=topsis_sorted[: request.top_n],
-        methods_agree_on_top_pick=methods_agree_on_top_pick,
         excluded_crops=excluded_crops,
         current_rotation=current_rotation,
     )

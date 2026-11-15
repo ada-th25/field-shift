@@ -76,8 +76,18 @@ def fetch_power_daily(
     df.index = pd.to_datetime(df.index, format="%Y%m%d")
     df.index.name = "date"
 
-    # POWER uses -999 as a fill value for missing days.
-    df = df.replace(-999, pd.NA)
+    # POWER uses -999 as a fill value for missing days. Fields differ in how
+    # long they lag behind "today" before data is published (observed:
+    # ~3 days for temperature/soil wetness, up to ~7-8 days for solar
+    # radiation -- see docs/algorithm.md), so even with schemas.py's default
+    # end-date buffer, the last day or two can still come back -999 for a
+    # slower-reporting field. Forward-filling carries the last known value
+    # into that gap rather than leaving a NaN that crashes downstream maths;
+    # day-to-day values for these fields don't swing enough for this to
+    # meaningfully skew a seasonal calculation.
+    # float("nan") rather than pd.NA: these are numeric columns, and pd.NA
+    # upcasts them to object dtype, which then warns on .ffill().
+    df = df.replace(-999, float("nan")).ffill()
     return df
 
 
